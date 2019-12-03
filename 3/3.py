@@ -61,7 +61,8 @@ def put_wire_on_board(board, path, start):
 
 def wire(board, point):
     # print(point)
-    board[point[0]][point[1]] += 1
+    # no selb intersections
+    board[point[0]][point[1]] = 1
     return board
 
 def get_intersection(board):
@@ -77,7 +78,7 @@ def get_distance(point, start):
 
 
 def main():
-    with open('./input.txt') as f:
+    with open('./input2.txt') as f:
         (path1, path2) = [l.rstrip('\n').split(',') for l in f.readlines()[:2]]
 
         # find out extents of the board
@@ -91,19 +92,32 @@ def main():
         max_up = max(ve1[1], ve2[1])
 
         board = []
+        board1 = []
+        board2 = []
         for _ in range(max_left + max_right + 1):
             board.append([])
+            board1.append([])
+            board2.append([])
 
-        for i in range(len(board)):
+        for i in range(len(board1)):
             for _ in range(max_down + max_up + 1):
                 board[i].append(0)
+                board1[i].append(0)
+                board2[i].append(0)
+
+
 
         start = [max_left, max_down]
 
-        board = wire(board, start)
-        board = put_wire_on_board(board, path1, start)
+        board1 = wire(board1, start)
+        board1 = put_wire_on_board(board1, path1, start)
+        board2 = put_wire_on_board(board2, path2, start)
 
-        board = put_wire_on_board(board, path2, start)
+        # merge boards
+        for x in range(len(board1)):
+            for y in range(len(board1[0])):
+                board[x][y] = (board1[x][y] + board2[x][y])
+
 
         intersections = get_intersection(board)
 
@@ -112,12 +126,15 @@ def main():
 
         for i in intersections:
             distance = get_distance(start, i)
+            print(i)
+            print(distance)
             if distance < min_distance:
                 min_distance = distance
                 closest_point = i
-
-        print(min_distance)
-        print(closest_point)
+        print('intersections={}'.format(intersections))
+        print('start={}'.format(start))
+        print('min_distance={}'.format(min_distance))
+        print('closest_point={}'.format(closest_point))
         # import pdb;pdb.set_trace()
 
 
