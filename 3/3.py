@@ -41,7 +41,7 @@ def put_wire_on_board(board, path, start):
     step = path[0]
     direction = step[:1]
     step_length = int(step[1:])
-    print(step)
+    # print(step)
     coordinate = start[:]
     for i in range(0, step_length):
         if direction == 'R':
@@ -60,13 +60,24 @@ def put_wire_on_board(board, path, start):
 
 
 def wire(board, point):
-    print(point)
+    # print(point)
     board[point[0]][point[1]] += 1
     return board
 
+def get_intersection(board):
+    intersections = []
+    for x in range(len(board)):
+        for y in range(len(board[0])):
+            if board[x][y] == 2:
+                intersections.append([x,y])
+    return intersections
+
+def get_distance(point, start):
+    return abs(point[0] - start[0]) + abs(point[1] - start[1])
+
 
 def main():
-    with open('./input4.txt') as f:
+    with open('./input.txt') as f:
         (path1, path2) = [l.rstrip('\n').split(',') for l in f.readlines()[:2]]
 
         # find out extents of the board
@@ -87,18 +98,27 @@ def main():
             for _ in range(max_down + max_up + 1):
                 board[i].append(0)
 
-        # board = [[0] * (max_down + max_up + 1)] * (max_left + max_right + 1)
         start = [max_left, max_down]
-        # import pdb;pdb.set_trace()
-
 
         board = wire(board, start)
         board = put_wire_on_board(board, path1, start)
 
         board = put_wire_on_board(board, path2, start)
 
+        intersections = get_intersection(board)
 
-        import pdb;pdb.set_trace()
+        closest_point = []
+        min_distance = max_down + max_up + max_left + max_right + 2
+
+        for i in intersections:
+            distance = get_distance(start, i)
+            if distance < min_distance:
+                min_distance = distance
+                closest_point = i
+
+        print(min_distance)
+        print(closest_point)
+        # import pdb;pdb.set_trace()
 
 
 
