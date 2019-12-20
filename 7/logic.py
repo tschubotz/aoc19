@@ -36,6 +36,9 @@ class Computer(object):
     def param_mode(self, position):
         return self.program[self.program_counter] // (10 ** (position + 1)) % 10
 
+    def did_halt(self):
+        return self.get_opcode() == 99
+
     def add(self):
         a = self.get_value(1)
         b = self.get_value(2)
@@ -154,14 +157,14 @@ class AmpRunner(object):
         for i in range(num_amps):
             self.amps.append(Amplifier())
 
-    def find_max_thruster(self, program):
+    def find_max_thruster(self, program, phase_settings_range=[0,1,2,3,4]):
         num_amps = len(self.amps)
         if num_amps != 5:
             print('not supported, yet')
             exit(0)
 
         highest = 0
-        permutations = list(itertools.permutations([0,1,2,3,4]))
+        permutations = list(itertools.permutations(phase_settings_range))
         for phase_setting in permutations:
             thruster_signal = self.run(program, phase_setting)
             # print('{},{},{},{},{}'.format(a, b, c, d, e))
@@ -181,4 +184,22 @@ class AmpRunner(object):
 
 class FeedbackAmpRunner(AmpRunner):
     def run(self, program, phase_settings):
-        pass
+        for i in range(5):
+            amp = self.amps[i]
+            amp.reset(program[:], phase_setting=phase_settings[i])
+
+        self.amps[0].computer.input_values.append(0)
+        while True:
+            for i in range(5):
+                amp = self.amps[i]
+                output_values = amp.run()
+                self.get_connected_amp(i).computer.input_values.append(output_values[-1])
+            if self.amps[4].computer.did_halt():
+                break
+        return self.amps.computer.output_values[-1]
+
+    def get_connected_amp(self, n):
+        return self.amps[n % len(self.amps)]
+
+    def find_max_thruster(self, program, phase_settings_range=[5,6,7,8,9]):
+        return super(FeedbackAmpRunner, self).find_max_thruster(program, phase_settings_range)
